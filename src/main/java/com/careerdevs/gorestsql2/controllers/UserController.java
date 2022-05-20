@@ -24,14 +24,15 @@ import java.util.Optional;
 public class UserController {
     @Autowired
     private UserRepository userRepository;
-
+    //WHY NOT USE RESTEMPLATE HERE WHEN MAKING EXTERNAL API REQUEST
     @GetMapping ("/{id}")
     public ResponseEntity<?> getUserById (@PathVariable ("id") String id){
         try{
             if(BasicUtils.isStrNaN(id)){
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, id + "is not a valid ID");
             }
-            int uID= Integer.parseInt(id);
+            long uID= Long.parseLong(id);
+            //optional is a class that will contain a user or not. instead of producing a error spring gives the optional type
             Optional<User> foundUser = userRepository.findById(uID);
             if(foundUser.isEmpty()){
                 throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "User not found with ID: " + id);
@@ -49,7 +50,7 @@ public class UserController {
             if(BasicUtils.isStrNaN(id)){
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, id + "is not a valid ID");
             }
-            int uID = Integer.parseInt(id);
+            long uID= Long.parseLong(id);
             Optional<User> foundUser = userRepository.findById(uID);
             if(foundUser.isEmpty()){
                 throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "User not found with ID: " + id);
@@ -85,8 +86,10 @@ public class UserController {
             if(BasicUtils.isStrNaN(userId)){
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST , userId + "is not a valid ID");
             }
-            int uID = Integer.parseInt(userId);
+            long uID= Long.parseLong(userId);
             String url = "https://gorest.co.in/public/v2/users/" + uID;
+
+            //what is the foundUser called
 
             User foundUser = restTemplate.getForObject(url , User.class );
 
@@ -110,9 +113,10 @@ public class UserController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<?> createNewUser ( @RequestBody User newUser){
+    //why am i getting Requestbody in a param, what other things have we used as a param
+    public ResponseEntity<?> createNewUser (@RequestBody User newUser){
         try{
-            ValidationError newUserErrors = UserValidation.validateNewUser(newUser);
+            ValidationError newUserErrors = UserValidation.validateUser(newUser , userRepository , false);
 
             if(newUserErrors.hasError()){
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST , newUserErrors.toString());
@@ -128,6 +132,10 @@ public class UserController {
     @PutMapping("/")
     public ResponseEntity<?> updateNewUser( @RequestBody User updateUser){
         try{
+            ValidationError newUserErrors = UserValidation.validateUser(updateUser , userRepository , true);
+            if(newUserErrors.hasError()){
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST , newUserErrors.toString());
+            }
             User savedUser = userRepository.save(updateUser);
             return new ResponseEntity<>(savedUser , HttpStatus.CREATED);
         }catch(HttpClientErrorException e){
@@ -149,9 +157,9 @@ public class UserController {
             int totalPyNum = Integer.parseInt(totalPages);
 
             for(int i = 0 ; i < totalPyNum ; i++){
-                String pageUrl = url + "?page" + i;
+                String pageUrl = url + "?page=" + i;
                 User[] pageUsers = restTemplate.getForObject(pageUrl, User[].class);
-                allUsers.addAll((Arrays.asList(firstPageUsers)));
+                allUsers.addAll(Arrays.asList(firstPageUsers));
             }
             userRepository.saveAll(allUsers);
             return new ResponseEntity<>("Users created" + allUsers.size(), HttpStatus.OK);

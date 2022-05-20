@@ -25,16 +25,13 @@ public class TodoValidation {
             }
         }
 
-
         long userId = todo.getUserId();
         String title = todo.getTitle();
         String dueOn = todo.getDue_on();
         String status = todo.getStatus();
 
-
         if(title == null || title.trim().equals("")){
             errors.addError("title", "title cannot be left blank ");
-
 
         }
         if(dueOn == null || dueOn.trim().equals("")){

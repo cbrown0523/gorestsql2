@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public class UserValidation {
     public static ValidationError validateUser(User user, UserRepository userRepo, boolean isUpdating){
-        ValidationError errors =new ValidationError();
+        ValidationError errors = new ValidationError();
         if(isUpdating){
             if (user.getId() == 0){
                 errors.addError("id", "id cannot be left blank");
